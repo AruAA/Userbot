@@ -22,6 +22,7 @@ from cowpy import cow
 
 from userbot import CMD_HELP
 from userbot.events import register, errors_handler
+from userbot.modules.admin import get_user_from_event
 
 # ================= CONSTANT =================
 METOOSTR = [
@@ -673,7 +674,8 @@ async def coin(event):
 async def who(event):
     """ slaps a user, or get slapped if not a reply. """
 
-    replied_user = await get_user(event)
+    replied_user = await get_user_from_event(event)
+    replied_user = replied_user[0]
     caption = await slap(replied_user, event)
     message_id_to_reply = event.message.reply_to_msg_id
 
@@ -689,47 +691,11 @@ async def who(event):
         )
 
 
-async def get_user(event):
-    """ Get the user from argument or replied message. """
-    if event.reply_to_msg_id:
-        previous_message = await event.get_reply_message()
-        replied_user = await event.client(
-            GetFullUserRequest(previous_message.from_id))
-    else:
-        user = event.pattern_match.group(1)
-
-        if user.isnumeric():
-            user = int(user)
-
-        if not user:
-            self_user = await event.client.get_me()
-            user = self_user.id
-
-        if event.message.entities is not None:
-            probable_user_mention_entity = event.message.entities[0]
-
-            if isinstance(probable_user_mention_entity,
-                          MessageEntityMentionName):
-                user_id = probable_user_mention_entity.user_id
-                replied_user = await event.client(GetFullUserRequest(user_id))
-                return replied_user
-        try:
-            user_object = await event.client.get_entity(user)
-            replied_user = await event.client(
-                GetFullUserRequest(user_object.id))
-
-        except (TypeError, ValueError):
-            await event.edit("`I don't slap aliens, they ugly AF !!`")
-            return None
-
-    return replied_user
-
-
 async def slap(replied_user, event):
     """ Construct a funny slap sentence !! """
-    user_id = replied_user.user.id
-    first_name = replied_user.user.first_name
-    username = replied_user.user.username
+    user_id = replied_user.id
+    first_name = replied_user.first_name
+    username = replied_user.username
 
     if username:
         slapped = "@{}".format(username)
