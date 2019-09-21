@@ -22,12 +22,25 @@ def register(**args):
     """ Register a new event. """
     pattern = args.get('pattern', None)
     disable_edited = args.get('disable_edited', False)
+    ignore_unsafe = args.get('ignore_unsafe', False)
+    forwards = args.get('forwards', False)
+    unsafe_pattern = r'^[^/!#@\$A-Za-z]'
 
     if pattern is not None and not pattern.startswith('(?i)'):
         args['pattern'] = '(?i)' + pattern
 
     if "disable_edited" in args:
         del args['disable_edited']
+
+    if "ignore_unsafe" in args:
+        del args['ignore_unsafe']
+
+    if "forwards" in args:
+        del args['forwards']
+
+    if pattern:
+        if not ignore_unsafe:
+            args['pattern'] = pattern.replace('^.', unsafe_pattern, 1)
 
     def decorator(func):
         if not disable_edited:
@@ -51,7 +64,7 @@ def errors_handler(func):
                 'date': datetime.datetime.now()
             }
 
-            text = "**USERBOT CRASH REPORT**\n\n"
+            text = "**USERBOT ERROR REPORT**\n\n"
 
             link = "[here](https://t.me/PaperplaneExtendedSupport)"
             text += "If you wanna you can report it"
